@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Control de Horas Extras – GCG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--red:#007B82;--red-dark:#005a5f;--red-light:#e0f0f1;--dark:#1C4656;--mid:#254d5e;--gray:#f0f5f7;--border:#c8d8df;--text:#1a1a1a;--muted:#6b8794;--white:#fff;--green:#1a7a4a;--green-light:#e8f5ee;--gold:#C9A571;--gold-light:#f5edd8;--teal-light:#51B0B6;--shadow:0 4px 24px rgba(28,70,86,0.10);--shadow-lg:0 8px 40px rgba(28,70,86,0.18);--radius:10px}
+html,body{height:100%;font-family:'Barlow',sans-serif;background:#e8eff2;color:var(--text);overflow-x:hidden}
+.screen{display:none;min-height:100vh;height:100%;flex-direction:column;position:relative}
+.screen.active{display:flex}
+.topbar{background:var(--dark);color:white;display:flex;align-items:stretch;border-bottom:3px solid var(--gold);flex-shrink:0;position:sticky;top:0;z-index:100}
+.topbar-brand{background:var(--dark);padding:10px 16px;display:flex;align-items:center}
+.topbar-info{padding:12px 18px;flex:1}
+.topbar-info h1{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.5px}
+.topbar-info p{font-size:11px;color:#8ca8b5;margin-top:2px}
+.topbar-badge{padding:12px 18px;display:flex;align-items:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;color:#8ca8b5}
+.period-tag{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:4px 10px;font-size:11px}
+.content{flex:1;max-width:900px;width:100%;margin:0 auto;padding:24px 16px 60px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.card-header-icon{width:36px;height:36px;background:var(--red-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.card-header h2{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--dark)}
+.card-header p{font-size:12px;color:var(--muted);margin-top:1px}
+.card-body{padding:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;font-family:'Barlow',sans-serif;font-size:16px;color:var(--text);background:#f7fafb;outline:none;transition:border-color 0.15s,box-shadow 0.15s;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(0,123,130,0.12);background:white}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b8794' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+.field-row{display:grid;gap:12px}
+.field-row.col2{grid-template-columns:1fr 1fr}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none;border-radius:8px;padding:14px 24px;cursor:pointer;transition:all 0.15s;touch-action:manipulation;user-select:none}
+.btn-primary{background:var(--red);color:white}
+.btn-primary:active{background:var(--red-dark);transform:scale(0.98)}
+.btn-dark{background:var(--dark);color:white}
+.btn-dark:active{background:#132f3b;transform:scale(0.98)}
+.btn-outline{background:white;color:var(--dark);border:1.5px solid var(--border)}
+.btn-outline:active{background:var(--gray);transform:scale(0.98)}
+.btn-green{background:var(--green);color:white}
+.btn-green:active{transform:scale(0.98)}
+.btn-full{width:100%}
+.btn-lg{padding:18px 28px;font-size:18px}
+.btn-sm{padding:9px 16px;font-size:13px}
+#screen-home .hero{background:var(--dark);color:white;padding:40px 24px 36px;text-align:center;border-bottom:3px solid var(--gold);flex-shrink:0}
+#screen-home .hero h2{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;letter-spacing:1px;margin-bottom:6px}
+#screen-home .hero p{color:#8ca8b5;font-size:15px}
+.period-selector{background:white;border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.period-selector select,.period-selector input{border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-size:14px;font-family:'Barlow',sans-serif;outline:none;background:#f7fafb;color:var(--text);appearance:none}
+.period-selector select:focus,.period-selector input:focus{border-color:var(--red)}
+.period-selector label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.period-group{display:flex;flex-direction:column;gap:4px}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);background:var(--dark);border-bottom:1px solid #2d5a6a}
+.stat-item{padding:14px 16px;text-align:center;border-right:1px solid #2d5a6a}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--gold)}
+.stat-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b8794;margin-top:2px}
+.emp-list{flex:1;overflow-y:auto}
+.emp-list-header{padding:12px 18px;background:var(--gray);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.emp-list-header span{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.emp-item{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid #e4ecf0;cursor:pointer;transition:background 0.1s;animation:slideIn 0.2s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.emp-item:active{background:#f0f5f7}
+.emp-avatar{width:44px;height:44px;border-radius:10px;background:var(--dark);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.emp-avatar.done{background:var(--green)}
+.emp-avatar.pending{background:var(--red)}
+.emp-info{flex:1;min-width:0}
+.emp-name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp-code{font-size:12px;color:var(--muted);margin-top:2px}
+.emp-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;flex-shrink:0}
+.badge-pending{background:var(--red-light);color:var(--red);border:1px solid var(--teal-light)}
+.badge-done{background:var(--green-light);color:var(--green);border:1px solid #b8e0ca}
+.badge-approved{background:#e8f0fe;color:#1a56c4;border:1px solid #c0d0f8}
+.emp-hours{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--gold);min-width:44px;text-align:right}
+.fab{position:fixed;bottom:28px;right:22px;width:60px;height:60px;background:var(--red);color:white;border:none;border-radius:50%;font-size:28px;line-height:1;box-shadow:0 4px 20px rgba(0,123,130,0.35);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;display:flex;align-items:center;justify-content:center;z-index:50}
+.fab:active{transform:scale(0.92)}
+.entry-header{background:var(--dark);padding:20px 20px 18px;color:white;flex-shrink:0}
+.entry-back{display:flex;align-items:center;gap:8px;font-size:13px;color:#8ca8b5;margin-bottom:14px;cursor:pointer;background:none;border:none;color:#8ca8b5}
+.entry-back:active{color:white}
+.entry-emp-name{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800}
+.entry-emp-meta{font-size:13px;color:#8ca8b5;margin-top:4px}
+.time-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.time-result{background:var(--dark);border-radius:8px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.time-result-label{font-size:12px;color:#8ca8b5;font-weight:600;letter-spacing:0.5px}
+.time-result-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:var(--gold)}
+.motivo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.motivo-btn{background:var(--gray);border:1.5px solid var(--border);border-radius:8px;padding:12px 10px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;line-height:1.3;transition:all 0.12s}
+.motivo-btn:active,.motivo-btn.selected{background:var(--red-light);border-color:var(--red);color:var(--red);font-weight:600}
+.approval-list{padding:0}
+.approval-item{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #e4ecf0}
+.approval-info{flex:1}
+.approval-name{font-weight:600;font-size:15px}
+.approval-detail{font-size:12px;color:var(--muted);margin-top:3px}
+.approval-hrs{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--gold)}
+.check-box{width:28px;height:28px;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.12s;flex-shrink:0}
+.check-box.checked{background:var(--green);border-color:var(--green);color:white}
+.pin-display{display:flex;justify-content:center;gap:12px;margin:20px 0 24px}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:background 0.15s,border-color 0.15s}
+.pin-dot.filled{background:var(--red);border-color:var(--red)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto}
+.pin-key{background:white;border:1.5px solid var(--border);border-radius:10px;padding:18px;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;text-align:center;cursor:pointer;transition:all 0.1s;user-select:none}
+.pin-key:active{background:var(--red);color:white;border-color:var(--red);transform:scale(0.95)}
+.pin-key.del{font-size:18px}
+#screen-login{background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-brand{background:transparent;padding:0 0 10px 0;margin-bottom:10px;display:flex;align-items:center;justify-content:center}
+.login-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white;letter-spacing:1px;margin-bottom:4px;text-align:center}
+.login-sub{font-size:12px;color:#6b8794;margin-bottom:32px;text-align:center}
+.login-box{background:#1e3d4d;border:1px solid #2d5a6a;border-radius:16px;padding:28px 24px 32px;width:100%;max-width:360px}
+.login-step{display:none}
+.login-step.active{display:block}
+.login-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b8794;margin-bottom:10px;display:block;text-align:center}
+.login-user-display{background:rgba(0,123,130,0.15);border:1px solid rgba(0,123,130,0.3);border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.login-user-avatar{width:42px;height:42px;background:var(--red);border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.login-user-name{font-weight:700;font-size:14px;color:white}
+.login-user-dept{font-size:11px;color:#6b8794;margin-top:2px}
+.login-codigo-input{width:100%;background:#152a35;border:1.5px solid #2d5a6a;border-radius:10px;padding:16px;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:white;text-align:center;letter-spacing:6px;outline:none;margin-bottom:16px;transition:border-color 0.15s;-webkit-appearance:none;-moz-appearance:textfield}
+.login-codigo-input:focus{border-color:var(--red)}
+.login-pin-display{display:flex;justify-content:center;gap:14px;margin:4px 0 24px}
+.login-pin-dot{width:20px;height:20px;border-radius:50%;border:2px solid #3d6a7a;background:transparent;transition:all 0.15s}
+.login-pin-dot.filled{background:var(--gold);border-color:var(--gold)}
+.login-error{background:rgba(0,123,130,0.15);border:1px solid rgba(0,123,130,0.4);border-radius:8px;padding:10px 14px;font-size:13px;color:#51B0B6;text-align:center;margin-bottom:16px;display:none}
+.login-error.show{display:block}
+.login-back-btn{background:none;border:none;color:#5a7a8a;font-size:12px;cursor:pointer;margin-top:16px;display:block;text-align:center;width:100%;font-family:'Barlow',sans-serif}
+.login-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.login-key{background:#254d5e;border:1.5px solid #2d5a6a;border-radius:10px;padding:18px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:white;text-align:center;cursor:pointer;transition:all 0.1s;user-select:none}
+.login-key:active{background:var(--red);border-color:var(--red);transform:scale(0.94)}
+.login-key.del{font-size:16px;color:#6b8794}
+.login-key.empty{visibility:hidden}
+.session-bar{background:#1e3d4d;border-top:1px solid #2d5a6a;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:12px;flex-shrink:0}
+.session-avatar{width:28px;height:28px;background:var(--red);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:white;display:flex;align-items:center;justify-content:center}
+.session-name{color:white;font-weight:600;flex:1}
+.session-logout{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:#8ca8b5;font-size:11px;cursor:pointer;font-family:'Barlow',sans-serif}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(28,70,86,0.6);backdrop-filter:blur(4px);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:white;border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:500px;animation:modalUp 0.25s ease;max-height:90vh;overflow-y:auto}
+@keyframes modalUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:white;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:500;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+.empty-state{text-align:center;padding:60px 30px;color:var(--muted)}
+.empty-state .icon{font-size:48px;margin-bottom:16px}
+.empty-state h3{font-family:'Barlow Condensed',sans-serif;font-size:22px;color:var(--text);margin-bottom:8px}
+@media print{
+body{background:white!important;margin:0!important;padding:0!important}
+.no-print{display:none!important}
+.screen{display:none!important}
+#screen-print{display:block!important}
+}
+@page{size:A4;margin:12mm 14mm}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-brand"><span style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:white;letter-spacing:4px;background:rgba(255,255,255,0.08);padding:8px 20px;border-radius:8px;border:1px solid rgba(255,255,255,0.15)">GCG</span></div>
+  <div class="login-title">Control de Horas Extras</div>
+  <div class="login-sub">Cocina de Vuelos, S.A. de C.V.</div>
+  <div class="login-box">
+    <div class="login-step active" id="login-step1">
+      <span class="login-label">Ingresa tu código de empleado</span>
+      <input class="login-codigo-input" id="login-codigo" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 24" autocomplete="off" oninput="loginLimpiarError()" onkeydown="if(event.key==='Enter')loginBuscarEmpleado()">
+      <div class="login-error" id="login-error1">Código no encontrado. Verifica e intenta de nuevo.</div>
+      <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="loginBuscarEmpleado()">Continuar →</button>
+    </div>
+    <div class="login-step" id="login-step2">
+      <div class="login-user-display">
+        <div class="login-user-avatar" id="login-avatar">--</div>
+        <div>
+          <div class="login-user-name" id="login-user-name">—</div>
+          <div class="login-user-dept" id="login-user-dept">—</div>
+        </div>
+      </div>
+      <span class="login-label">Ingresa tu PIN de 4 dígitos</span>
+      <div class="login-pin-display">
+        <div class="login-pin-dot" id="lpd0"></div>
+        <div class="login-pin-dot" id="lpd1"></div>
+        <div class="login-pin-dot" id="lpd2"></div>
+        <div class="login-pin-dot" id="lpd3"></div>
+      </div>
+      <div class="login-error" id="login-error2">PIN incorrecto. Intenta de nuevo.</div>
+      <div class="login-numpad" id="login-numpad"></div>
+      <button class="login-back-btn" onclick="loginBack()">← Cambiar código</button>
+    </div>
+    <div class="login-step" id="login-step3">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:32px">🔐</div>
+        <div style="font-weight:700;font-size:15px;color:white;margin-top:8px">Acceso Supervisor</div>
+        <div style="font-size:11px;color:#6b8794;margin-top:4px">Ingresa tu PIN de autorización</div>
+      </div>
+      <div class="login-pin-display">
+        <div class="login-pin-dot" id="spd0"></div>
+        <div class="login-pin-dot" id="spd1"></div>
+        <div class="login-pin-dot" id="spd2"></div>
+        <div class="login-pin-dot" id="spd3"></div>
+      </div>
+      <div class="login-error" id="login-error3">PIN incorrecto. Intenta de nuevo.</div>
+      <div class="login-numpad" id="sup-numpad"></div>
+      <button class="login-back-btn" onclick="loginSupBack()">← Volver</button>
+    </div>
+  </div>
+  <button style="background:none;border:none;color:#4a7080;font-size:12px;margin-top:20px;cursor:pointer;font-family:'Barlow',sans-serif;" onclick="loginShowSup()">Acceso Supervisor ›</button>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <div class="topbar">
+    <div class="topbar-brand"><span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:white;letter-spacing:3px">GCG</span></div>
+    <div class="topbar-info">
+      <h1>Control de Horas Extras</h1>
+      <p>Cocina de Vuelos, S.A. de C.V. &nbsp;·&nbsp; <span style="color:#4fc472">● Google Sheets</span></p>
+    </div>
+    <div class="topbar-badge no-print">
+      <span class="period-tag" id="topbar-period">—</span>
+    </div>
+  </div>
+  <div class="period-selector no-print">
+    <div class="period-group">
+      <label>Quincena</label>
+      <select id="sel-quincena" onchange="updatePeriod()">
+        <option value="1">1ª Quincena</option>
+        <option value="2">2ª Quincena</option>
+      </select>
+    </div>
+    <div class="period-group">
+      <label>Mes</label>
+      <select id="sel-mes" onchange="updatePeriod()">
+        <option>Enero</option><option>Febrero</option><option>Marzo</option>
+        <option>Abril</option><option>Mayo</option><option>Junio</option>
+        <option>Julio</option><option>Agosto</option><option>Septiembre</option>
+        <option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+      </select>
+    </div>
+    <div class="period-group">
+      <label>Año</label>
+      <input type="number" id="inp-anio" value="2026" min="2020" max="2099" style="width:80px" onchange="updatePeriod()">
+    </div>
+    <div class="period-group" id="depto-group">
+      <label>Departamento</label>
+      <select id="sel-depto" onchange="updatePeriod()">
+        <option>Producción</option>
+        <option>Producción Outsourcing</option>
+      </select>
+    </div>
+    <button class="btn btn-outline btn-sm sup-only" style="align-self:flex-end" onclick="showApproval()">✅ Aprobar registros</button>
+    <button class="btn btn-dark btn-sm sup-only" style="align-self:flex-end" onclick="showPrint()">🖨 Imprimir planilla</button>
+    <button class="btn btn-outline btn-sm" style="align-self:flex-end;border-color:#4285f4;color:#4285f4" onclick="syncNow()">⟳ Sincronizar</button>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num" id="stat-registros">0</div><div class="stat-lbl">Registros</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-horas">0.0</div><div class="stat-lbl">Horas extras</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-aprobados">0</div><div class="stat-lbl">Aprobados</div></div>
+  </div>
+  <div class="emp-list" id="emp-list">
+    <div class="emp-list-header">
+      <span>Registros del período</span>
+      <span id="list-count" style="color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;"></span>
+    </div>
+    <div id="emp-items"></div>
+  </div>
+  <div class="session-bar no-print" id="session-bar">
+    <div class="session-avatar" id="session-avatar">--</div>
+    <div class="session-name" id="session-name">—</div>
+    <button class="session-logout" onclick="logout()">⏏ Cerrar sesión</button>
+  </div>
+  <button class="fab no-print" onclick="showNewEntry()" title="Nuevo registro">＋</button>
+</div>
+
+<!-- ENTRY -->
+<div class="screen" id="screen-entry">
+  <div class="entry-header">
+    <button class="entry-back" onclick="goHome()">← Volver</button>
+    <div class="entry-emp-name" id="entry-title">Nuevo Registro</div>
+    <div class="entry-emp-meta" id="entry-meta"></div>
+  </div>
+  <div class="content" style="overflow-y:auto;">
+    <div class="card">
+      <div class="card-header"><div class="card-header-icon">👤</div><div><h2>Datos del Empleado</h2><p>Información básica del registro</p></div></div>
+      <div class="card-body">
+        <div class="field-row col2">
+          <div class="field"><label>Código</label><input type="number" id="f-codigo" placeholder="Ej. 24" inputmode="numeric"></div>
+          <div class="field"><label>Fecha</label><input type="date" id="f-fecha"></div>
+        </div>
+        <div class="field"><label>Nombre Completo</label>
+          <input type="text" id="f-nombre" placeholder="Nombre del empleado" list="emp-datalist" autocomplete="off">
+          <datalist id="emp-datalist"></datalist>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-header-icon">⏱</div><div><h2>Horario</h2><p>Hora de inicio y salida de las extras</p></div></div>
+      <div class="card-body">
+        <div class="time-grid">
+          <div class="field"><label>Hora de Inicio</label><input type="time" id="f-inicio" value="01:00" onchange="calcHoras()"></div>
+          <div class="field"><label>Hora de Salida</label><input type="time" id="f-salida" onchange="calcHoras()"></div>
+        </div>
+        <div class="time-result">
+          <div><div class="time-result-label">Total Horas Extras</div><div style="font-size:11px;color:#5a7a8a;margin-top:2px">Calculado automáticamente</div></div>
+          <div class="time-result-val" id="f-total-display">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-header-icon">📋</div><div><h2>Motivo</h2><p>Selecciona la razón de las horas extras</p></div></div>
+      <div class="card-body">
+        <div class="motivo-grid" id="motivo-grid"></div>
+        <div class="field" style="margin-top:12px">
+          <label>Observaciones (opcional)</label>
+          <textarea id="f-obs" rows="2" placeholder="Nota adicional..." style="resize:none;font-size:15px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button class="btn btn-outline" style="flex:1" onclick="goHome()">Cancelar</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveEntry()">Guardar Registro ✓</button>
+    </div>
+    <div style="height:40px"></div>
+  </div>
+</div>
+
+<!-- APPROVAL -->
+<div class="screen" id="screen-approval">
+  <div class="topbar">
+    <div class="topbar-brand" style="padding:10px 16px;display:flex;align-items:center"><span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:white;letter-spacing:3px">GCG</span></div>
+    <div class="topbar-info"><h1>Aprobación de Supervisor</h1><p id="approval-period-label">—</p></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;">
+    <div style="padding:16px 18px;background:var(--red-light);border-bottom:1px solid var(--teal-light);display:flex;align-items:center;gap:10px" class="no-print">
+      <span style="font-size:20px">⚠️</span>
+      <span style="font-size:13px;color:#005a5f">Revise cada registro antes de aprobar.</span>
+    </div>
+    <div class="approval-list" id="approval-list"></div>
+    <div style="padding:20px 18px 10px;border-top:1px solid var(--border)" class="no-print">
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline btn-sm" onclick="toggleAll(true)">✓ Seleccionar todos</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleAll(false)">✗ Deseleccionar</button>
+      </div>
+    </div>
+    <div style="padding:0 18px 20px" class="no-print">
+      <div class="card">
+        <div class="card-header"><div class="card-header-icon">🔐</div><div><h2>Autorización del Supervisor</h2><p>Ingresa tu PIN para aprobar</p></div></div>
+        <div class="card-body">
+          <div id="pin-identified" style="display:none;background:var(--green-light);border:1.5px solid #b8e0ca;border-radius:10px;padding:16px 18px;margin-bottom:18px;align-items:center;gap:14px">
+            <div style="font-size:32px">✅</div>
+            <div>
+              <div style="font-weight:700;font-size:16px" id="pin-sup-name">—</div>
+              <div style="font-size:12px;color:var(--green)" id="pin-sup-cargo">—</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="resetPin()">Cambiar</button>
+          </div>
+          <div id="pin-input-area">
+            <label style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px">PIN del Supervisor</label>
+            <div class="pin-display" id="pin-display">
+              <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+              <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+            </div>
+            <div class="pin-pad" id="pin-pad"></div>
+          </div>
+          <button class="btn btn-green btn-full btn-lg" style="margin-top:24px" onclick="approveAll()">✅ Aprobar y Firmar Registros</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar no-print" style="position:sticky;bottom:0;border-top:2px solid var(--gold);border-bottom:none;justify-content:flex-end;padding:10px 16px;gap:10px">
+    <button class="btn btn-outline btn-sm" onclick="goHome()">← Volver</button>
+  </div>
+</div>
+
+<!-- PRINT -->
+<div class="screen" id="screen-print">
+  <div class="no-print" style="background:var(--dark);padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:3px solid var(--gold);">
+    <button class="btn btn-outline btn-sm" onclick="goHome()">← Volver</button>
+    <button class="btn btn-primary btn-sm" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+  </div>
+  <div class="print-container" id="print-area"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box"><div id="modal-content"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA — SOLO NORA PÉREZ
+// ============================================================
+const MOTIVOS = [
+  "Cambio de ciclo","VAC PAC","Cambio de ciclo Crew","Supervisar operación",
+  "Cubrir ausencia de personal","Aumento de datos","Cubrir plaza vacante",
+  "Incapacidad del Personal","Vuelos charter","Otro"
+];
+
+const EMPLEADOS_PRODUCCION = [
+  {codigo:24, nombre:"NORA ARACELY PEREZ CASTRO"},
+];
+
+const EMPLEADOS_OUTSOURCING = [
+  {codigo:24, nombre:"NORA ARACELY PEREZ CASTRO"},
+];
+
+const SUPERVISORES = [
+  { nombre: "NORA PEREZ", pin: "1234", cargo: "Supervisora de Producción" },
+];
+
+const PINES_PRODUCCION = [
+  {codigo:24, nombre:'NORA ARACELY PEREZ CASTRO', pin:'9561', departamento:'Producción'},
+];
+
+const PINES_OUTSOURCING = [
+  {codigo:24, nombre:'NORA ARACELY PEREZ CASTRO', pin:'9561', departamento:'Producción Outsourcing'},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let entries = [];
+let editingId = null;
+let selectedMotivo = "";
+let matchedSupervisor = null;
+let pinEntered = "";
+let approvalChecked = {};
+let currentUser = null;
+let loginPinEntered = '';
+let loginFoundEmpleado = null;
+let supPinEntered = '';
+
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycby-51ZtGJApm16wZOAiSh7tKy8TYk2wFveCuG2qYGOikREvC1iwzD83f6z4u8CL5h5K/exec';
+const COLS=['id','codigo','nombre','fecha','inicio','salida','horas','motivo','obs','approved','approvedAt','supervisorNombre','supervisorCargo','creadoAt','departamento'];
+
+// ============================================================
+// LOGIN
+// ============================================================
+function loginLimpiarError(){const el=document.getElementById('login-error1');el.classList.remove('show')}
+function loginBuscarEmpleado(){
+  const raw=document.getElementById('login-codigo').value.trim();
+  const val=raw.replace(/\D/g,'');
+  const errEl=document.getElementById('login-error1');
+  if(!val){errEl.textContent='Ingresa tu código.';errEl.classList.add('show');return}
+  const codigo=parseInt(val,10);
+  const found=[...PINES_PRODUCCION,...PINES_OUTSOURCING].find(e=>e.codigo===codigo);
+  if(!found){document.getElementById('login-error1').classList.add('show');return}
+  loginFoundEmpleado=found;loginPinEntered='';
+  const initials=found.nombre.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('login-avatar').textContent=initials;
+  document.getElementById('login-user-name').textContent=found.nombre;
+  document.getElementById('login-user-dept').textContent=found.departamento;
+  document.getElementById('login-step1').classList.remove('active');
+  document.getElementById('login-step2').classList.add('active');
+  document.getElementById('login-error2').classList.remove('show');
+  updateLoginPinDisplay();
+}
+function loginBack(){loginFoundEmpleado=null;loginPinEntered='';document.getElementById('login-step2').classList.remove('active');document.getElementById('login-step1').classList.add('active');document.getElementById('login-codigo').value='';updateLoginPinDisplay()}
+function buildLoginNumpad(){
+  const pad=document.getElementById('login-numpad');if(!pad)return;pad.innerHTML='';
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+    const btn=document.createElement('div');
+    btn.className='login-key'+(k==='⌫'?' del':'')+(k===''?' empty':'');
+    btn.textContent=k;
+    if(k!==''){btn.addEventListener('click',()=>loginKeyPress(k));btn.addEventListener('touchend',(e)=>{e.preventDefault();loginKeyPress(k)})}
+    pad.appendChild(btn)
+  })
+}
+function loginKeyPress(k){if(k==='⌫'){loginPinEntered=loginPinEntered.slice(0,-1)}else if(loginPinEntered.length<4){loginPinEntered+=k}updateLoginPinDisplay();document.getElementById('login-error2').classList.remove('show');if(loginPinEntered.length===4)setTimeout(loginValidatePin,150)}
+function updateLoginPinDisplay(){for(let i=0;i<4;i++){const dot=document.getElementById('lpd'+i);if(dot)dot.classList.toggle('filled',i<loginPinEntered.length)}}
+function loginValidatePin(){if(!loginFoundEmpleado)return;if(loginPinEntered===loginFoundEmpleado.pin){currentUser={...loginFoundEmpleado,rol:'empleado'};onLoginSuccess()}else{document.getElementById('login-error2').classList.add('show');loginPinEntered='';updateLoginPinDisplay()}}
+async function onLoginSuccess(){
+  const initials=currentUser.nombre.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('session-avatar').textContent=initials;
+  document.getElementById('session-name').textContent=currentUser.nombre.split(' ').slice(0,2).join(' ');
+  document.getElementById('sel-depto').value=currentUser.departamento;
+  document.getElementById('sel-depto').disabled=true;
+  updatePeriod();await loadData();renderHome();showScreen('screen-home');
+}
+function loginShowSup(){document.getElementById('login-step1').classList.remove('active');document.getElementById('login-step2').classList.remove('active');document.getElementById('login-step3').classList.add('active');supPinEntered='';updateSupPinDisplay();document.getElementById('login-error3').classList.remove('show');buildSupNumpad()}
+function loginSupBack(){document.getElementById('login-step3').classList.remove('active');document.getElementById('login-step1').classList.add('active')}
+function buildSupNumpad(){
+  const pad=document.getElementById('sup-numpad');if(!pad)return;pad.innerHTML='';
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+    const btn=document.createElement('div');
+    btn.className='login-key'+(k==='⌫'?' del':'')+(k===''?' empty':'');
+    btn.textContent=k;
+    if(k!==''){btn.addEventListener('click',()=>supKeyPress(k));btn.addEventListener('touchend',(e)=>{e.preventDefault();supKeyPress(k)})}
+    pad.appendChild(btn)
+  })
+}
+function supKeyPress(k){if(k==='⌫'){supPinEntered=supPinEntered.slice(0,-1)}else if(supPinEntered.length<4){supPinEntered+=k}updateSupPinDisplay();document.getElementById('login-error3').classList.remove('show');if(supPinEntered.length===4)setTimeout(supValidatePin,150)}
+function updateSupPinDisplay(){for(let i=0;i<4;i++){const dot=document.getElementById('spd'+i);if(dot)dot.classList.toggle('filled',i<supPinEntered.length)}}
+function supValidatePin(){const found=SUPERVISORES.find(s=>s.pin===supPinEntered);if(found){currentUser={codigo:'SUP_'+found.pin,nombre:found.nombre,departamento:'Todos',pin:found.pin,rol:'supervisor',cargo:found.cargo};onSupLoginSuccess()}else{document.getElementById('login-error3').classList.add('show');supPinEntered='';updateSupPinDisplay()}}
+async function onSupLoginSuccess(){
+  const initials=currentUser.nombre.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('session-avatar').textContent=initials;
+  document.getElementById('session-name').textContent=currentUser.nombre.split(' ').slice(0,2).join(' ')+' · Supervisor';
+  document.getElementById('sel-depto').disabled=false;
+  updatePeriod();await loadData();renderHome();showScreen('screen-home');
+}
+function logout(){currentUser=null;loginPinEntered='';loginFoundEmpleado=null;document.getElementById('login-step1').classList.add('active');document.getElementById('login-step2').classList.remove('active');document.getElementById('login-step3').classList.remove('active');document.getElementById('login-codigo').value='';document.getElementById('login-error1').classList.remove('show');document.getElementById('login-error2').classList.remove('show');document.getElementById('sel-depto').disabled=false;supPinEntered='';updateLoginPinDisplay();showScreen('screen-login')}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded',()=>{setDefaultPeriod();buildDatalist();buildMotivoGrid();buildPinPad();buildLoginNumpad();document.getElementById('f-fecha').value=todayStr();showScreen('screen-login')});
+
+// ============================================================
+// DATA SYNC
+// ============================================================
+function setLoading(on,msg='Sincronizando...'){let el=document.getElementById('sync-overlay');if(!el){el=document.createElement('div');el.id='sync-overlay';el.style.cssText='position:fixed;inset:0;background:rgba(28,70,86,0.5);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none';el.innerHTML='<div style="width:44px;height:44px;border:4px solid #2d5a6a;border-top-color:#C9A571;border-radius:50%;animation:spin 0.7s linear infinite"></div><div style="color:white;font-family:\'Barlow Condensed\',sans-serif;font-size:18px;letter-spacing:1px" id="sync-msg">'+msg+'</div>';if(!document.getElementById('spin-style')){const s=document.createElement('style');s.id='spin-style';s.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(s)}document.body.appendChild(el)}el.style.display=on?'flex':'none';if(on){document.getElementById('sync-msg').textContent=msg;clearTimeout(el._autoClose);el._autoClose=setTimeout(()=>{el.style.display='none'},8000)}}
+
+async function saveData(){
+  setLoading(true,'Guardando en Google Sheets...');
+  try{
+    localStorage.setItem('gcg-entries-backup',JSON.stringify(entries));
+    const rows=[COLS,...entries.map(e=>COLS.map(c=>{const v=e[c];if(v===null||v===undefined)return'';return String(v)}))];
+    const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'write',entries:rows})});
+    const result=await resp.json();
+    if(result.status==='ok'){toast('✓ Guardado en Google Sheets','success')}else{throw new Error('Error')}
+  }catch(err){toast('Sin conexión — guardado localmente','');localStorage.setItem('gcg-entries-backup',JSON.stringify(entries))}
+  finally{setLoading(false)}
+}
+
+async function loadData(){
+  setLoading(true,'Cargando datos...');
+  try{
+    const resp=await fetch(SCRIPT_URL+'?action=read');
+    const rows=await resp.json();
+    if(!rows||rows.length<2){entries=[];setLoading(false);return}
+    let header=rows[0];
+    entries=rows.slice(1).map(row=>{
+      const obj={};
+      header.forEach((col,i)=>{
+        let val=(row[i]!==undefined&&row[i]!==null&&String(row[i])!=='undefined')?String(row[i]):'';
+        if(col==='approved'){obj[col]=val==='true'||val==='TRUE'}
+        else if(col==='fecha'){if(!val||val===''){obj[col]=null;return}try{const valFixed=val.length===10?val+"T12:00:00":val;const d=new Date(valFixed);if(!isNaN(d.getTime())){obj[col]=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}else{obj[col]=val}}catch(e){obj[col]=val}}
+        else if(col==='inicio'||col==='salida'){if(!val||val===''){obj[col]=null;return}try{const d=new Date(val);if(!isNaN(d.getTime())){obj[col]=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}else{obj[col]=val}}catch(e){obj[col]=val}}
+        else{obj[col]=val===''?null:val}
+      });return obj;
+    }).filter(e=>(e.id&&e.id!=='null'&&e.id!=='')||e.codigo);
+    toast('✓ Datos sincronizados','success');
+  }catch(err){try{entries=JSON.parse(localStorage.getItem('gcg-entries-backup')||'[]')}catch(e){entries=[]}toast('Sin conexión — datos locales','')}
+  finally{setLoading(false)}
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function toMin(t){const[h,m]=t.split(':').map(Number);return h*60+m}
+
+function setDefaultPeriod(){
+  const now=new Date();
+  const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('sel-mes').value=months[now.getMonth()];
+  document.getElementById('inp-anio').value=now.getFullYear();
+  document.getElementById('sel-quincena').value=now.getDate()<=15?'1':'2';
+  updatePeriod();
+}
+function updatePeriod(){
+  const q=document.getElementById('sel-quincena').value==='1'?'1ª':'2ª';
+  const m=document.getElementById('sel-mes').value;
+  const a=document.getElementById('inp-anio').value;
+  const d=document.getElementById('sel-depto').value;
+  const txt=q+' Quincena · '+m+' '+a+' · '+d;
+  document.getElementById('topbar-period').textContent=txt;
+  document.getElementById('approval-period-label').textContent=txt;
+  refreshDatalist();renderHome();
+}
+function getEmpleadosList(){const depto=document.getElementById('sel-depto').value;return depto==='Producción Outsourcing'?EMPLEADOS_OUTSOURCING:EMPLEADOS_PRODUCCION}
+function buildDatalist(){const input=document.getElementById('f-nombre');input.addEventListener('input',function(){const lista=getEmpleadosList();const match=lista.find(e=>e.nombre===this.value);if(match)document.getElementById('f-codigo').value=match.codigo});refreshDatalist()}
+function refreshDatalist(){const dl=document.getElementById('emp-datalist');dl.innerHTML='';getEmpleadosList().forEach(e=>{const opt=document.createElement('option');opt.value=e.nombre;dl.appendChild(opt)})}
+function buildMotivoGrid(){const grid=document.getElementById('motivo-grid');MOTIVOS.forEach(m=>{const btn=document.createElement('button');btn.className='motivo-btn';btn.textContent=m;btn.onclick=()=>{document.querySelectorAll('.motivo-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedMotivo=m};grid.appendChild(btn)})}
+
+// ============================================================
+// HOME
+// ============================================================
+function renderHome(){
+  const esSup=currentUser&&currentUser.rol==='supervisor';
+  document.querySelectorAll('.sup-only').forEach(el=>el.style.display=esSup?'':'none');
+  const dg=document.getElementById('depto-group');if(dg)dg.style.display=esSup?'':'none';
+  const list=document.getElementById('emp-items');list.innerHTML='';
+  const filtered=getFilteredEntries();
+  if(filtered.length===0){list.innerHTML='<div class="empty-state"><div class="icon">📋</div><h3>Sin registros</h3><p>Presiona ＋ para agregar el primer registro de horas extras</p></div>'}
+  else{filtered.forEach((e,i)=>{const div=document.createElement('div');div.className='emp-item';div.style.animationDelay=(i*0.03)+'s';const initials=e.nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();const badgeClass=e.approved?'badge-approved':'badge-pending';const badgeTxt=e.approved?'✅ Aprobado':'⏳ Pendiente';const avatarClass=e.approved?'done':'pending';div.innerHTML='<div class="emp-avatar '+avatarClass+'">'+initials+'</div><div class="emp-info"><div class="emp-name">'+e.nombre+'</div><div class="emp-code">'+e.fecha+' · '+e.motivo+'</div></div><div class="emp-hours">'+e.horas+'h</div><span class="emp-badge '+badgeClass+'">'+badgeTxt+'</span>';div.onclick=()=>editEntry(e.id);list.appendChild(div)})}
+  const totalHrs=filtered.reduce((s,e)=>s+(parseFloat(e.horas)||0),0);
+  const approved=filtered.filter(e=>e.approved).length;
+  document.getElementById('stat-registros').textContent=filtered.length;
+  document.getElementById('stat-horas').textContent=totalHrs.toFixed(1);
+  document.getElementById('stat-aprobados').textContent=approved;
+  document.getElementById('list-count').textContent=filtered.length+' registros';
+}
+
+function getFilteredEntries(){
+  const q=parseInt(document.getElementById('sel-quincena').value);
+  const mes=document.getElementById('sel-mes').value;
+  const anio=parseInt(document.getElementById('inp-anio').value);
+  const depto=document.getElementById('sel-depto').value;
+  const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesIdx=months.indexOf(mes);
+  return entries.filter(e=>{
+    if(!e.fecha)return false;
+    const d=new Date(e.fecha+'T12:00:00');
+    if(d.getFullYear()!==anio)return false;
+    if(d.getMonth()!==mesIdx)return false;
+    const day=d.getDate();
+    if(q===1&&day>15)return false;
+    if(q===2&&day<=15)return false;
+    const dep=(e.departamento&&e.departamento!=='undefined'&&e.departamento!=='null')?e.departamento:null;
+    if(dep&&dep!==depto)return false;
+    if(currentUser&&currentUser.rol==='empleado'){if(String(e.codigo)!==String(currentUser.codigo))return false}
+    return true;
+  });
+}
+
+// ============================================================
+// ENTRY
+// ============================================================
+function showNewEntry(){
+  editingId=null;
+  if(currentUser&&currentUser.rol==='empleado'){
+    document.getElementById('f-codigo').value=currentUser.codigo;
+    document.getElementById('f-nombre').value=currentUser.nombre;
+    document.getElementById('f-codigo').readOnly=true;
+    document.getElementById('f-nombre').readOnly=true;
+    document.getElementById('f-codigo').style.opacity='0.6';
+    document.getElementById('f-nombre').style.opacity='0.6';
+  }else{
+    document.getElementById('f-codigo').value='';document.getElementById('f-nombre').value='';
+    document.getElementById('f-codigo').readOnly=false;document.getElementById('f-nombre').readOnly=false;
+    document.getElementById('f-codigo').style.opacity='1';document.getElementById('f-nombre').style.opacity='1';
+  }
+  document.getElementById('f-fecha').value=todayStr();
+  document.getElementById('f-inicio').value='01:00';
+  document.getElementById('f-salida').value='';
+  document.getElementById('f-obs').value='';
+  document.getElementById('f-total-display').textContent='—';
+  document.getElementById('entry-title').textContent=currentUser?currentUser.nombre.split(' ')[0]:'Nuevo Registro';
+  document.getElementById('entry-meta').textContent=currentUser&&currentUser.rol==='empleado'?'Cód. '+currentUser.codigo+' · '+currentUser.departamento:'';
+  document.querySelectorAll('.motivo-btn').forEach(b=>b.classList.remove('selected'));
+  selectedMotivo='';showScreen('screen-entry');
+}
+
+function editEntry(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  editingId=id;
+  document.getElementById('f-codigo').value=e.codigo;
+  document.getElementById('f-nombre').value=e.nombre;
+  document.getElementById('f-fecha').value=e.fecha;
+  document.getElementById('f-inicio').value=e.inicio;
+  document.getElementById('f-salida').value=e.salida;
+  document.getElementById('f-obs').value=e.obs||'';
+  document.getElementById('f-total-display').textContent=e.horas+'h';
+  document.getElementById('entry-title').textContent=e.nombre.split(' ')[0];
+  document.getElementById('entry-meta').textContent='Editando registro';
+  document.querySelectorAll('.motivo-btn').forEach(b=>{b.classList.toggle('selected',b.textContent===e.motivo)});
+  selectedMotivo=e.motivo;showScreen('screen-entry');
+}
+
+function calcHoras(){const ini=document.getElementById('f-inicio').value;const sal=document.getElementById('f-salida').value;if(!ini||!sal){document.getElementById('f-total-display').textContent='—';return}let diff=toMin(sal)-toMin(ini);if(diff<0)diff+=1440;document.getElementById('f-total-display').textContent=diff>0?(diff/60).toFixed(1)+'h':'—'}
+
+async function saveEntry(){
+  const codigo=document.getElementById('f-codigo').value.trim();
+  const nombre=document.getElementById('f-nombre').value.trim().toUpperCase();
+  const fecha=document.getElementById('f-fecha').value;
+  const inicio=document.getElementById('f-inicio').value;
+  const salida=document.getElementById('f-salida').value;
+  const obs=document.getElementById('f-obs').value.trim();
+  if(!codigo||!nombre||!fecha||!inicio||!salida){toast('Completa todos los campos','error');return}
+  if(!selectedMotivo){toast('Selecciona un motivo','error');return}
+  let diff=toMin(salida)-toMin(inicio);if(diff<0)diff+=1440;
+  const horas=(diff/60).toFixed(1);
+  if(parseFloat(horas)<=0){toast('Horario inválido','error');return}
+  if(editingId){const idx=entries.findIndex(x=>x.id===editingId);if(idx!==-1){entries[idx]={...entries[idx],codigo,nombre,fecha,inicio,salida,horas,motivo:selectedMotivo,obs,approved:false,approvedAt:null,supervisorNombre:null,supervisorCargo:null,departamento:document.getElementById('sel-depto').value}}toast('Registro actualizado','success')}
+  else{entries.push({id:uid(),codigo,nombre,fecha,inicio,salida,horas,motivo:selectedMotivo,obs,approved:false,approvedAt:null,supervisorNombre:null,supervisorCargo:null,creadoAt:new Date().toISOString(),departamento:document.getElementById('sel-depto').value});toast('Registro guardado ✓','success')}
+  await saveData();goHome();
+}
+
+// ============================================================
+// APPROVAL
+// ============================================================
+function showApproval(){
+  const filtered=getFilteredEntries();
+  if(filtered.length===0){toast('No hay registros en este período','error');return}
+  approvalChecked={};filtered.forEach(e=>{approvalChecked[e.id]=!e.approved});
+  renderApprovalList(filtered);pinEntered='';matchedSupervisor=null;updatePinDisplay();
+  document.getElementById('pin-identified').style.display='none';
+  document.getElementById('pin-input-area').style.display='';
+  showScreen('screen-approval');
+}
+function renderApprovalList(filtered){
+  const list=document.getElementById('approval-list');list.innerHTML='';
+  filtered.forEach(e=>{const div=document.createElement('div');div.className='approval-item';div.innerHTML='<div class="check-box '+(approvalChecked[e.id]?'checked':'')+'" onclick="toggleCheck(\''+e.id+'\', this)">'+(approvalChecked[e.id]?'✓':'')+'</div><div class="approval-info"><div class="approval-name">'+e.nombre+'</div><div class="approval-detail">'+e.fecha+' · '+e.motivo+'</div>'+(e.approved?'<div style="font-size:11px;color:var(--green);margin-top:2px">✅ Ya aprobado</div>':'')+'</div><div class="approval-hrs">'+e.horas+'h</div>';list.appendChild(div)});
+}
+function toggleCheck(id,el){approvalChecked[id]=!approvalChecked[id];el.classList.toggle('checked',approvalChecked[id]);el.textContent=approvalChecked[id]?'✓':''}
+function toggleAll(val){const filtered=getFilteredEntries();filtered.forEach(e=>{approvalChecked[e.id]=val});renderApprovalList(filtered)}
+async function approveAll(){
+  if(!matchedSupervisor){toast('Ingresa tu PIN primero','error');return}
+  const toApprove=Object.keys(approvalChecked).filter(id=>approvalChecked[id]);
+  if(toApprove.length===0){toast('No hay registros seleccionados','error');return}
+  const now=new Date().toISOString();
+  toApprove.forEach(id=>{const idx=entries.findIndex(x=>x.id===id);if(idx!==-1){entries[idx].approved=true;entries[idx].approvedAt=now;entries[idx].supervisorNombre=matchedSupervisor.nombre;entries[idx].supervisorCargo=matchedSupervisor.cargo}});
+  await saveData();toast('✅ '+toApprove.length+' registros aprobados','success');setTimeout(goHome,1400);
+}
+async function syncNow(){await loadData();renderHome()}
+function resetPin(){pinEntered='';matchedSupervisor=null;updatePinDisplay();document.getElementById('pin-identified').style.display='none';document.getElementById('pin-input-area').style.display=''}
+
+function buildPinPad(){
+  const pad=document.getElementById('pin-pad');
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+    const btn=document.createElement('div');
+    btn.className='pin-key'+(k==='⌫'?' del':'')+(k===''?' empty':'');
+    btn.textContent=k;if(k===''){btn.style.visibility='hidden'}
+    btn.onclick=()=>{if(k==='')return;if(k==='⌫'){pinEntered=pinEntered.slice(0,-1)}else if(pinEntered.length<4){pinEntered+=k}updatePinDisplay();if(pinEntered.length===4)verifyPin()};
+    pad.appendChild(btn)
+  })
+}
+function verifyPin(){const sup=SUPERVISORES.find(s=>s.pin===pinEntered);if(sup){matchedSupervisor=sup;document.getElementById('pin-sup-name').textContent=sup.nombre;document.getElementById('pin-sup-cargo').textContent=sup.cargo;document.getElementById('pin-identified').style.display='flex';document.getElementById('pin-input-area').style.display='none';toast('✓ Bienvenida, '+sup.nombre,'success')}else{toast('PIN incorrecto','error');pinEntered='';updatePinDisplay()}}
+function updatePinDisplay(){for(let i=0;i<4;i++){document.getElementById('pd'+i).classList.toggle('filled',i<pinEntered.length)}}
+
+// ============================================================
+// PRINT
+// ============================================================
+function showPrint(){
+  const filtered=getFilteredEntries();
+  if(filtered.length===0){toast('No hay registros para imprimir','error');return}
+  const q=document.getElementById('sel-quincena').value==='1'?'1ª':'2ª';
+  const mes=document.getElementById('sel-mes').value;
+  const anio=document.getElementById('inp-anio').value;
+  const depto=document.getElementById('sel-depto').value;
+  const totalHrs=filtered.reduce((s,e)=>s+(parseFloat(e.horas)||0),0);
+  const rows=filtered.map((e,i)=>{const bg=i%2===0?'#fff':'#f5f9fb';return'<tr><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:11px">'+(i+1)+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:11px">'+e.fecha+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:11px">'+e.nombre+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:11px">'+e.motivo+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:11px;text-align:center">'+e.inicio+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:11px;text-align:center">'+e.salida+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:14px;font-weight:700;color:#C9A571;text-align:center">'+e.horas+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';text-align:center">'+(e.approved?'✅':'⏳')+'</td><td style="padding:6px;border:1px solid #c8d8df;background:'+bg+';font-size:10px;color:#5a7a8a">'+(e.obs||'')+'</td></tr>'}).join('');
+  const html='<html><head><meta charset="UTF-8"><title>Horas Extras GCG</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:20px}@media print{@page{size:A4;margin:12mm 14mm}}</style></head><body><div style="border-bottom:2px solid #1C4656;padding-bottom:12px;margin-bottom:16px;display:flex;justify-content:space-between"><div style="background:#1C4656;color:white;font-size:22px;font-weight:900;padding:6px 14px;letter-spacing:3px">GCG</div><div style="text-align:right"><div style="font-size:16px;font-weight:700;color:#1C4656">Control de Horas Extras</div><div style="font-size:12px;color:#5a7a8a">'+q+' Quincena · '+mes+' '+anio+' · '+depto+'</div></div></div><table style="width:100%;border-collapse:collapse"><thead><tr><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">#</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Fecha</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Nombre</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Motivo</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Inicio</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Salida</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Horas</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left;border-right:1px solid #2d5a6a">Estado</th><th style="background:#1C4656;color:white;padding:7px 6px;font-size:10px;text-align:left">Obs.</th></tr></thead><tbody>'+rows+'<tr><td colspan="6" style="padding:6px;background:#1C4656;color:white;font-weight:700;font-size:12px;text-align:right;border:1px solid #2d5a6a">TOTAL:</td><td style="padding:6px;background:#1C4656;color:#C9A571;font-size:16px;font-weight:700;text-align:center;border:1px solid #2d5a6a">'+totalHrs.toFixed(1)+'</td><td colspan="2" style="background:#1C4656;border:1px solid #2d5a6a"></td></tr></tbody></table><div style="margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px"><div style="border-top:2px solid #1C4656;padding-top:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#5a7a8a">Preparado por</div><div style="height:50px"></div><div style="font-size:12px;font-weight:600">RRHH / Operaciones</div></div><div style="border-top:2px solid #1C4656;padding-top:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#5a7a8a">Aprobado por</div><div style="height:50px"></div><div style="font-size:12px;font-weight:600">NORA PEREZ — Supervisora</div></div></div></body></html>';
+  const win=window.open('','_blank','width=900,height=700');win.document.write(html);win.document.close();win.focus();setTimeout(()=>win.print(),500);
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const el=document.getElementById(id);el.classList.add('active');el.scrollTop=0;window.scrollTo(0,0)}
+function goHome(){if(!currentUser){showScreen('screen-login');return}renderHome();showScreen('screen-home')}
+function toast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2800)}
+function closeModal(e){if(e.target===document.getElementById('modal-overlay')){document.getElementById('modal-overlay').classList.remove('active')}}
+</script>
+</body>
+</html>
